@@ -46,5 +46,5 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
-(Metadata Extractor library)[https://code.google.com/p/metadata-extractor/]
+[Metadata Extractor library](https://code.google.com/p/metadata-extractor/)
 and rest of the code is licensed under Apache License 2.0.
