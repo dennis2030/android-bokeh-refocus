@@ -10,7 +10,9 @@ Usage
 Once CamPaper is installed on the target device :
 
 1. Take a depth of field photo on Google Camera
-2. Use share (either in Google Camera or Gallery application) to export image into CamPaper
+2. Within CamPaper application you should be able to choose depth of field photos for application usage
+
+TODO: currently application only shows depthmap image extracted from Google Camera photos.
 
 
 Licenses

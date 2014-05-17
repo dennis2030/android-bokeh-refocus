@@ -4,10 +4,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <ImageView
-        android:id="@+id/imageview"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@android:string/untitled" />
+        android:gravity="center"
+        android:padding="30dp"
+        android:text="@string/no_photo_selected"
+        android:textColor="#FFF"
+        android:textSize="24sp" />
 
 </LinearLayout>

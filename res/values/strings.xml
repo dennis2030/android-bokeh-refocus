@@ -1,5 +1,10 @@
 <resources>
 
     <string name="app_name">CamPaper</string>
+    <string name="choose_photo">Choose Photo</string>
+    <string name="action_done">DONE</string>
+    <string name="action_choose">CHOOSE PHOTO</string>
+    <string name="no_photo_selected">No photo chosen. Please do select a photo using \'choose photo\' button.\n\nThis application supports depth of field photos taken with Google Camera only.</string>
+    <string name="no_photos_found">No supported photos found.\n\nThis application supports depth of field photos taken with Google Camera only.</string>
 
 </resources>
