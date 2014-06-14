@@ -6,17 +6,26 @@ import java.io.InputStream;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.MotionEvent;
 import android.widget.ImageView;
 
 public class MainActivity extends Activity {
 
+	public double drawLeft = 0;
+	public double drawTop = 0;
+	public double drawWidth = 0;
+	public double drawHeight = 0;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +37,55 @@ public class MainActivity extends Activity {
         actionBar.setTitle(R.string.app_name);
         actionBar.setBackgroundDrawable(new ColorDrawable(
                 android.R.color.transparent));
+               
+        
     }
+    
+    protected double[] calcCoC(int[] inputPixels, int z_focus ,int width, int height)
+    {
+    	double[] CoC = new double[width*height];
+    	double s = 3.0;
+    	
+    	for(int i=0;i<inputPixels.length;i++)
+    	{
+    		int depth = convertToRGB(inputPixels[i])[0];
+    		CoC[i] = s * Math.abs(1-z_focus/ depth);
+    		
+    	}
+    	
+    	return CoC;
+    }
+    protected int[] convertToRGB(int input)
+    {
+    	int[] rgb = new int[3];
+		int R = (input >> 16) & 0xff;     //bitwise shifting
+        int G = (input >> 8) & 0xff;
+        int B = input & 0xff;
+        rgb[0] = R;
+        rgb[1] = G;
+        rgb[2] = B;
+        return rgb;
+
+    }
+    /*
+    protected Color[][] getRGBValues(int[] pixels, int width, int height)
+    {
+    	Color[][] rgb = new Color[width][height];
+    	for(int y=0;y<height;y++)
+    	{
+    		for(int x=0;x<width;x++)
+    		{
+    			int index = y*width + x;
+    			int p = pixels[index];
+    			int R = (p >> 16) & 0xff;     //bitwise shifting
+                int G = (p>> 8) & 0xff;
+                int B = p & 0xff;
+                rgb[x][y] = new Color(R,G,B);
+    		}
+    	}
+    	return rgb;
+    }*/
+          
     
     @Override
     protected void onStart() {
@@ -37,10 +94,52 @@ public class MainActivity extends Activity {
         InputStream is = null;
         try {
             is = openFileInput("depthmap");
-            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            Bitmap depth_bitmap = BitmapFactory.decodeStream(is);
+            is = openFileInput("image");
+            Bitmap image_bitmap = BitmapFactory.decodeStream(is);
+            
+            int[] pixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
+            depth_bitmap.getPixels(pixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
+            
             setContentView(R.layout.layout_main);
             ImageView iv = (ImageView)findViewById(R.id.imageview);
-            iv.setImageBitmap(bitmap);
+            iv.setImageBitmap(depth_bitmap);
+            
+            // calc the paddings of image
+            double bitmap_ratio = ((double)depth_bitmap.getWidth())/depth_bitmap.getHeight();
+            double imageview_ratio = ((double)iv.getWidth())/iv.getHeight();
+            Log.d("touch", "bitmap_ratio = " + bitmap_ratio);
+            Log.d("touch", "imageview_ratio = " + imageview_ratio);
+            
+            if(bitmap_ratio > imageview_ratio)
+            {
+            	drawLeft = 0;
+            	drawHeight = (imageview_ratio/bitmap_ratio) * iv.getHeight();
+            	drawTop = ((double)iv.getHeight() - drawHeight)/2;
+            	Log.d("touch", "drawTop = " + drawTop);
+            }
+            else
+            {
+            	drawTop = 0;
+            	drawWidth = (bitmap_ratio/imageview_ratio) * iv.getWidth();
+            	Log.d("touch", "drawWidth = " + drawWidth);
+            	drawLeft = ((double)iv.getWidth() - drawWidth)/2;
+            	Log.d("touch", "drawLeft = " + drawLeft); 
+            }
+            
+            // add touch listener
+            final View imageview = findViewById(R.id.imageview);
+            imageview.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                	
+                	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
+                //	imageview.setText("Touch coordinates : " +
+                  //      String.valueOf(event.getX()) + "x" + String.valueOf(event.getY()));
+                        return true;
+                }
+            });
+            
         } catch (Exception ex) {
             setContentView(R.layout.layout_main_empty);
         } finally {
