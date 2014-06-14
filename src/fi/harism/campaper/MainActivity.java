@@ -21,13 +21,15 @@ import android.widget.ImageView;
 
 public class MainActivity extends Activity {
 
-	public double drawLeft = 0;
-	public double drawTop = 0;
-	public double drawWidth = 0;
-	public double drawHeight = 0;
+	private double drawLeft = 0;
+	private double drawTop = 0;
+	private double drawWidth = 0;
+	private double drawHeight = 0;
 	
 	private Bitmap depth_bitmap = null;
 	private Bitmap image_bitmap = null;
+	
+	int[] depthPixels = null;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,10 +101,11 @@ public class MainActivity extends Activity {
             is = openFileInput("depthmap");
             depth_bitmap = BitmapFactory.decodeStream(is);
             is = openFileInput("image");
-            image_bitmap = BitmapFactory.decodeStream(is);
-            
-            int[] pixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
-            depth_bitmap.getPixels(pixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
+            image_bitmap = BitmapFactory.decodeStream(is);                       
+         
+            // copy pixels of depth image into depthPixels
+            depthPixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
+            depth_bitmap.getPixels(depthPixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
             
             setContentView(R.layout.layout_main);
             ImageView iv = (ImageView)findViewById(R.id.imageview);
@@ -152,12 +155,14 @@ public class MainActivity extends Activity {
             {
             	drawLeft = 0;
             	drawHeight = (imageview_ratio/bitmap_ratio) * iv.getHeight();
+            	drawWidth = iv.getWidth();
             	drawTop = ((double)iv.getHeight() - drawHeight)/2;            	
             }
             else
             {
             	drawTop = 0;
-            	drawWidth = (bitmap_ratio/imageview_ratio) * iv.getWidth();            	
+            	drawWidth = (bitmap_ratio/imageview_ratio) * iv.getWidth();
+            	drawHeight = iv.getHeight();
             	drawLeft = ((double)iv.getWidth() - drawWidth)/2;            	 
             }
             
@@ -165,11 +170,26 @@ public class MainActivity extends Activity {
             iv.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
+                	double x = event.getX() - drawLeft;
+                	double y = event.getY() - drawTop;
+                	
+                	// boundary handling
+                	if(x < 0 || y < 0 || x > drawWidth || y > drawHeight)
+                		return false;
+                	
+                	int depthWidth = depth_bitmap.getWidth();
+                	
+                	// scale back to size of depth bitmap
+                	double depthRatio = (double)depthWidth / drawWidth;
+                	int scaledX = (int)(x*depthRatio);
+                	int scaledY = (int)(y*depthRatio);
+                	int index = scaledX + scaledY * depthWidth;
+                	int zFocus = convertToRGB( depthPixels[index] )[0]; 
                 	
                 	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
-                //	imageview.setText("Touch coordinates : " +
-                  //      String.valueOf(event.getX()) + "x" + String.valueOf(event.getY()));
-                        return true;
+                	Log.d("touch", "selected depth = " + zFocus);                	
+
+                    return true;
                 }
             });
 
