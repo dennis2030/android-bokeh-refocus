@@ -1,17 +1,23 @@
 package fi.harism.campaper;
 
+import java.util.Arrays;
+
 import android.graphics.Bitmap;
 import android.util.Log;
 
 public class BokehFilter {
 	private String TAG = "BokehFilter";
 	
-	private int PATCH_RADIUS = 4;
+	private int PATCH_RADIUS = 20;
 	
 	private Bitmap mImage, mDepth;
 	private int mZFocus;
 	private double maxCoc;
-	private Bitmap mBlur;
+	
+	private enum Direction {
+		ROW,
+		COLUMN
+	};
 	
 	public BokehFilter(Bitmap image, Bitmap depth, int zFocus) {
 		mImage = image;
@@ -24,9 +30,6 @@ public class BokehFilter {
 	}
 	
 	public Bitmap generate() {
-		if(mBlur != null) {
-			return mBlur;
-		}
 		int width = mImage.getWidth();
 		int height = mImage.getHeight();
 		
@@ -39,33 +42,114 @@ public class BokehFilter {
 		mImage.getPixels(image, 0, width, 0, 0, width, height);
 		mDepth.getPixels(depth, 0, width, 0, 0, width, height);
 		
+		blurByRow(blur, image, depth, coc);
+		
+		image = Arrays.copyOf(blur, blur.length);
+		
+		blurByCol(blur, image, depth, coc);
+		
+		Bitmap res = mImage.copy(Bitmap.Config.ARGB_8888, true);
+		res.setPixels(blur, 0, mImage.getWidth(), 0, 0, mImage.getWidth(), mImage.getHeight());
+		
+		return res;
+	}
+
+	private void blurByRow(int[] blur, int[] image, int[] depth, double[] coc) {
+		int width = mImage.getWidth();
+		int height = mImage.getHeight();
+
 		for(int r = PATCH_RADIUS; r < height - PATCH_RADIUS; ++ r) {
 			Log.d(TAG, "bluring " + r + " row");
 			for(int c = PATCH_RADIUS; c < width - PATCH_RADIUS; ++ c) {
-				int idx = r * width + c;
-				double[] weights = calcWeights(coc, depth, idx);
-				double sumWeight = 0.0;
-				for(int i = 0; i < PATCH_RADIUS * 2 + 1; ++ i) {
-					sumWeight += weights[i];
-					//Log.d(TAG, "weights" + weights[i]);
-				}
-				for(int i = 0; i < PATCH_RADIUS * 2 + 1; ++ i) {
-					int pixel = image[idx + i - PATCH_RADIUS];
-					int red = (pixel >> 16) & 0xff;
-					int green = (pixel >> 8) & 0xff;
-					int blue = pixel & 0xff;
-					red = (int) (weights[i] * red / sumWeight);
-					green = (int) (weights[i] * green / sumWeight);
-					blue = (int) (weights[i] * blue / sumWeight);
-					blur[idx] += 0xff000000 | (red << 16) | (green << 8) | blue;
-				}
+				double[] partCoc = (double[]) getPatch(coc, r, c, Direction.ROW);
+				int[] partDepth = (int[]) getPatch(depth, r, c, Direction.ROW);
+				double[] weights = calcWeights(partCoc, partDepth);
+				
+				int[] partImage = (int[]) getPatch(image, r, c, Direction.ROW);
+				int newPixel = innerProduct(partImage, weights);
+				updatePixel(r, c, blur, newPixel);
 			}
 		}
+	}
+
+	private void blurByCol(int[] blur, int[] image, int[] depth, double[] coc) {
+		int width = mImage.getWidth();
+		int height = mImage.getHeight();
+
+		for(int c = PATCH_RADIUS; c < width - PATCH_RADIUS; ++ c) {
+			Log.d(TAG, "bluring " + c + " column");
+			for(int r = PATCH_RADIUS; r < height - PATCH_RADIUS; ++ r) {
+				double[] partCoc = (double[]) getPatch(coc, r, c, Direction.COLUMN);
+				int[] partDepth = (int[]) getPatch(depth, r, c, Direction.COLUMN);
+				double[] weights = calcWeights(partCoc, partDepth);
+				
+				int[] partImage = (int[]) getPatch(image, r, c, Direction.COLUMN);
+				int newPixel = innerProduct(partImage, weights);
+				updatePixel(r, c, blur, newPixel);
+			}
+		}
+	}
+	
+	private Object getPatch(Object src, int rCenter, int cCenter, Direction direction) {
+		int patchSize = PATCH_RADIUS * 2 + 1;
+		Object patch;
+		if(src instanceof double[]) {
+			patch = new double[patchSize];
+		} else if(src instanceof int[]) {
+			patch = new int[patchSize];
+		} else {
+			patch = null;
+			Log.d(TAG, "currently supported type are: double[], int[]");
+		}
+		for(int i = 0; i < patchSize; ++ i) {
+			int curIdx = -1;
+			if(direction == Direction.ROW) {
+				curIdx = rCenter * mImage.getWidth() + (cCenter + i - PATCH_RADIUS);
+			} else if(direction == Direction.COLUMN) {
+				curIdx = (rCenter + i - PATCH_RADIUS) * mImage.getWidth() + cCenter;
+			}
+			
+			if(src instanceof double[]) {
+				((double[]) patch)[i] = ((double[]) src)[curIdx];
+			} else if(src instanceof int[]) {
+				((int[]) patch)[i] = ((int[]) src)[curIdx];
+			}
+		}
+		return patch;
+	}
+	
+	private int innerProduct(int[] partImage, double[] weights) {
+		int patchSize = PATCH_RADIUS * 2 + 1;
+		int newPixel = 0x00000000;
 		
-		mBlur = mImage.copy(Bitmap.Config.ARGB_8888, true);
-		mBlur.setPixels(blur, 0, mImage.getWidth(), 0, 0, mImage.getWidth(), mImage.getHeight());
+		double allRed = 0.0, allGreen = 0.0, allBlue = 0.0;
 		
-		return mBlur;
+		double sumWeight = 0.0;
+		for(int i = 0; i < patchSize; ++ i) {
+			sumWeight += weights[i];
+		}
+		for(int i = 0; i < patchSize; ++ i) {
+			int pixel = partImage[i];
+			int oneRed, oneGreen, oneBlue;
+			oneRed = (pixel >> 16) & 0xff;
+			oneGreen = (pixel >> 8) & 0xff;
+			oneBlue = pixel & 0xff;
+			allRed += weights[i] * oneRed / sumWeight;
+			allGreen += weights[i] * oneGreen / sumWeight;
+			allBlue += weights[i] * oneBlue / sumWeight;
+		}
+		
+		newPixel += 0xff000000 |
+				(((int) allRed) << 16) |
+				(((int) allGreen) << 8) |
+				(int) allBlue;
+		
+		return newPixel;
+	}
+	
+	private void updatePixel(int rTarget, int cTarget, int[] blur, int newPixel) {
+		int idx = rTarget * mImage.getWidth() + cTarget;
+		blur[idx] = newPixel;
 	}
 	
 	private double[] calcCoc(int[] inputPixels, int z_focus) {
@@ -89,7 +173,7 @@ public class BokehFilter {
     	return CoC;
 	}
 	
-	private double[] calcWeights(double[] coc, int[] depth, int idx) {
+	private double[] calcWeights(double[] partCoc, int[] partDepth) {
 		double[] weights = new double[PATCH_RADIUS * 2 + 1];
 		
 		// initialize weights
@@ -102,26 +186,22 @@ public class BokehFilter {
 			if( i == PATCH_RADIUS )							
 				continue;
 			// index at original image
-			int pixelNow = idx + i - PATCH_RADIUS;
-			int dist = Math.abs(idx - pixelNow);
+			int dist = Math.abs(PATCH_RADIUS - i);
 			
 			// calculate overlap part
 			double overlap = 0.0;
-			if(coc[pixelNow] <= dist)
+			if(partCoc[i] <= dist)
 			{
 				weights[i] = 0.0;
-				//Log.d(TAG, "case 1");
 				continue;
 			}
-			else if(coc[pixelNow] < dist +1)
+			else if(partCoc[i] < dist +1)
 			{
-				overlap = coc[pixelNow]-dist;
-				//Log.d(TAG, "case 2");
+				overlap = partCoc[i]-dist;
 			}
 			else
 			{
 				overlap = 1.0;		
-				//Log.d(TAG, "case 3");
 			}
 			
 			// calculate intensity part
@@ -132,13 +212,14 @@ public class BokehFilter {
 			// calculate for leakage part
 			double leakage = 1.0;
 			double LEAKAGE_CONST = 1.0/maxCoc;
-			int z = depth[pixelNow] & 0xff;
+			int z = partDepth[i] & 0xff;
 			if(z > mZFocus)
 			{
-				leakage = coc[pixelNow] * LEAKAGE_CONST;
+				leakage = partCoc[i] * LEAKAGE_CONST;
 			}
 			leakage = 1.0;
 			weights[i] = overlap * intensity * leakage;
+			weights[i] = 1.0;
 		}
 		
 		return weights;
