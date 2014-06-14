@@ -149,6 +149,10 @@ public class MainActivity extends Activity {
     	
         // TODO Auto-generated method stub
         super.onWindowFocusChanged(hasFocus);
+        	if(depth_bitmap == null) {
+        		return;
+        	}
+        	
             ImageView iv = (ImageView) findViewById(R.id.imageview);
             
             // calculate the paddings of image
