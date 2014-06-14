@@ -26,6 +26,9 @@ public class MainActivity extends Activity {
 	public double drawWidth = 0;
 	public double drawHeight = 0;
 	
+	private Bitmap depth_bitmap = null;
+	private Bitmap image_bitmap = null;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,51 +97,17 @@ public class MainActivity extends Activity {
         InputStream is = null;
         try {
             is = openFileInput("depthmap");
-            Bitmap depth_bitmap = BitmapFactory.decodeStream(is);
+            depth_bitmap = BitmapFactory.decodeStream(is);
             is = openFileInput("image");
-            Bitmap image_bitmap = BitmapFactory.decodeStream(is);
+            image_bitmap = BitmapFactory.decodeStream(is);
             
             int[] pixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
             depth_bitmap.getPixels(pixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
             
             setContentView(R.layout.layout_main);
             ImageView iv = (ImageView)findViewById(R.id.imageview);
-            iv.setImageBitmap(depth_bitmap);
-            
-            // calc the paddings of image
-            double bitmap_ratio = ((double)depth_bitmap.getWidth())/depth_bitmap.getHeight();
-            double imageview_ratio = ((double)iv.getWidth())/iv.getHeight();
-            Log.d("touch", "bitmap_ratio = " + bitmap_ratio);
-            Log.d("touch", "imageview_ratio = " + imageview_ratio);
-            
-            if(bitmap_ratio > imageview_ratio)
-            {
-            	drawLeft = 0;
-            	drawHeight = (imageview_ratio/bitmap_ratio) * iv.getHeight();
-            	drawTop = ((double)iv.getHeight() - drawHeight)/2;
-            	Log.d("touch", "drawTop = " + drawTop);
-            }
-            else
-            {
-            	drawTop = 0;
-            	drawWidth = (bitmap_ratio/imageview_ratio) * iv.getWidth();
-            	Log.d("touch", "drawWidth = " + drawWidth);
-            	drawLeft = ((double)iv.getWidth() - drawWidth)/2;
-            	Log.d("touch", "drawLeft = " + drawLeft); 
-            }
-            
-            // add touch listener
-            final View imageview = findViewById(R.id.imageview);
-            imageview.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                	
-                	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
-                //	imageview.setText("Touch coordinates : " +
-                  //      String.valueOf(event.getX()) + "x" + String.valueOf(event.getY()));
-                        return true;
-                }
-            });
+            iv.setImageBitmap(depth_bitmap);                                                
+         
             
         } catch (Exception ex) {
             setContentView(R.layout.layout_main_empty);
@@ -169,6 +138,43 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+    
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        // TODO Auto-generated method stub
+        super.onWindowFocusChanged(hasFocus);
+            ImageView iv = (ImageView) findViewById(R.id.imageview);
+            
+            // calculate the paddings of image
+            double bitmap_ratio = ((double)depth_bitmap.getWidth())/depth_bitmap.getHeight();
+            double imageview_ratio = ((double)iv.getWidth())/iv.getHeight();                        
+            if(bitmap_ratio > imageview_ratio)
+            {
+            	drawLeft = 0;
+            	drawHeight = (imageview_ratio/bitmap_ratio) * iv.getHeight();
+            	drawTop = ((double)iv.getHeight() - drawHeight)/2;            	
+            }
+            else
+            {
+            	drawTop = 0;
+            	drawWidth = (bitmap_ratio/imageview_ratio) * iv.getWidth();            	
+            	drawLeft = ((double)iv.getWidth() - drawWidth)/2;            	 
+            }
+            
+            // add touch listener            
+            iv.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                	
+                	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
+                //	imageview.setText("Touch coordinates : " +
+                  //      String.valueOf(event.getX()) + "x" + String.valueOf(event.getY()));
+                        return true;
+                }
+            });
+
+        }
+    
     
     
 }
