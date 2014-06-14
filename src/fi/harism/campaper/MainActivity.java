@@ -31,6 +31,8 @@ public class MainActivity extends Activity {
 	
 	int[] depthPixels = null;
 	
+	BokehFilter mBokeh;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -144,6 +146,7 @@ public class MainActivity extends Activity {
     
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+    	
         // TODO Auto-generated method stub
         super.onWindowFocusChanged(hasFocus);
             ImageView iv = (ImageView) findViewById(R.id.imageview);
@@ -187,7 +190,15 @@ public class MainActivity extends Activity {
                 	int zFocus = convertToRGB( depthPixels[index] )[0]; 
                 	
                 	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
-                	Log.d("touch", "selected depth = " + zFocus);                	
+                	Log.d("touch", "selected depth = " + zFocus);          
+                	
+                	if(mBokeh == null) {
+                		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
+                        Bitmap blur = mBokeh.generate();
+                        ImageView iv = (ImageView)findViewById(R.id.imageview);
+                        iv.setImageBitmap(blur);
+                	}
+                    
 
                     return true;
                 }
