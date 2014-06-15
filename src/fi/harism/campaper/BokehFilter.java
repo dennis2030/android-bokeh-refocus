@@ -14,6 +14,9 @@ public class BokehFilter {
 	private int mZFocus;
 	private double maxCoc;
 	private Bitmap mBlur;
+	private int case1 = 0;
+	private int case2 = 0;
+	private int case3 = 0;
 	
 	public BokehFilter(Bitmap image, Bitmap depth, int zFocus) {
 		mImage = image;
@@ -36,12 +39,18 @@ public class BokehFilter {
 		int[] depth = new int[width * height];
 		int[] blur = new int[width * height];
 		
-		double[] coc = calcCoc(depth, mZFocus);
-		
 		mImage.getPixels(image, 0, width, 0, 0, width, height);
 		mDepth.getPixels(depth, 0, width, 0, 0, width, height);
+		Log.d(TAG,"case z:" + mZFocus);
+		double[] coc = calcCoc(depth, mZFocus);
 		
 		blurByRow(blur, image, depth, coc, width, height);
+		
+		Log.d(TAG,"case1 = " + case1 + ", case2 = " + case2 + ", case3 = " + case3);
+		
+		case1 = 0;
+		case2 = 0;
+		case3 = 0;
 		
 		image = Arrays.copyOf(blur, blur.length);
 		transpose(blur, width, height);
@@ -50,7 +59,7 @@ public class BokehFilter {
 		transpose(coc, width, height);
 		
 		blurByRow(blur, image, depth, coc, height, width);
-		
+		Log.d(TAG,"case1 = " + case1 + ", case2 = " + case2 + ", case3 = " + case3);
 		transpose(blur, height, width);
 		
 		mBlur = mImage.copy(Bitmap.Config.ARGB_8888, true);
@@ -60,15 +69,28 @@ public class BokehFilter {
 	}
 
 	private void blurByRow(int[] blur, int[] image, int[] depth, double[] coc, int width, int height) {
+		double[] haha = new double[PATCH_RADIUS * 2 + 1];
+		int hoho = 0;
+		
 		for(int r = PATCH_RADIUS; r < height - PATCH_RADIUS; ++ r) {
 			Log.d(TAG, "bluring " + r + " row");
 			for(int c = PATCH_RADIUS; c < width - PATCH_RADIUS; ++ c) {
 				int idx = r * width + c;
 				double[] weights = calcWeights(coc, depth, idx);
+
+				++ hoho;
+				for(int i = 0; i < weights.length; ++ i) {
+					haha[i] += weights[i];
+				}
 				
 				int newPixel = innerProduct(image, weights, idx);
 				blur[idx] = newPixel;
 			}
+		}
+		
+		for(int i = 0; i < haha.length; ++ i) {
+			haha[i] /= hoho;
+			Log.d(TAG, "weights[" + i + "]: " + haha[i]);
 		}
 	}
 	
@@ -127,25 +149,27 @@ public class BokehFilter {
 		double[] CoC = new double[inputPixels.length];
 		
 		// magic constant
-    	double s = 30.0;
+    	double s = 20.0;
+    	
+    	double sumCoc = 0.0;
     	
     	for(int i=0;i<inputPixels.length;i++)
     	{    		
     		// use b channel as depth (since it is grey level, it's okay.)
     		int depth = inputPixels[i]  & 0xff;   
-    		if(depth == 0)
-    		{
-    			depth = 1;
-    		}
-    		CoC[i] = s * Math.abs(1-z_focus/ depth);
+    		CoC[i] = s * Math.abs(1-(double)z_focus/ depth);
+   // 		Log.d(TAG, "case4 depth: " + depth + ", coc: " + CoC[i]);
     		maxCoc = Math.max(CoC[i], maxCoc);
+    		sumCoc += CoC[i];
     	}
+    	
+    	Log.d(TAG, "case0: average coc:" + (sumCoc / inputPixels.length));
     	
     	return CoC;
 	}
 	
 	private double[] calcWeights(double[] coc, int[] depth, int idx) {
-		double[] weights = new double[PATCH_RADIUS * 2 + 1];
+		double[] weights = new double[PATCH_RADIUS * 2 + 1];			
 		
 		// initialize weights
 		for(int i=0;i<weights.length;i++)
@@ -165,24 +189,27 @@ public class BokehFilter {
 			if(coc[pixelNow] <= dist)
 			{
 				weights[i] = 0.0;
+				case1++;
 				//Log.d(TAG, "case 1");
 				continue;
 			}
 			else if(coc[pixelNow] < dist +1)
 			{
 				overlap = coc[pixelNow]-dist;
+				case2++;
 				//Log.d(TAG, "case 2");
 			}
 			else
 			{
+				case3++;
 				overlap = 1.0;		
 				//Log.d(TAG, "case 3");
 			}
 			
 			// calculate intensity part
 			double intensity = 0.0; 
-			double INTENSITY_CONST = 1.0;
-			intensity = INTENSITY_CONST / (dist*dist);
+			double INTENSITY_CONST = 1;
+			intensity = INTENSITY_CONST / (coc[pixelNow]);
 			
 			// calculate for leakage part
 			double leakage = 1.0;
@@ -192,9 +219,9 @@ public class BokehFilter {
 			{
 				leakage = coc[pixelNow] * LEAKAGE_CONST;
 			}
-			leakage = 1.0;
+			//leakage = 1.0;
 			weights[i] = overlap * intensity * leakage;
-			weights[i] = 1.0;
+		//	weights[i] = 1.0;
 		}
 		
 		return weights;
