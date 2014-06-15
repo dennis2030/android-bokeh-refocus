@@ -24,6 +24,7 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
 
 		// calculate overlap part
 		float overlap = 0.0;
+
 		if(coc_buffer[pixel_now] <= dist)
 		{
 			weights[i] = 0.0;
@@ -50,7 +51,8 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
 		{
 			leakage = coc_buffer[pixel_now];
 		}
-		weights[i] = overlap * intensity * leakage;
+	//	weights[i] = overlap * intensity * leakage;
+		weights[i] = 1;
 	}
 	
     int new_pixel = 0x00000000;
@@ -75,6 +77,14 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
     all_red /= sum_weight;
     all_green /= sum_weight;
     all_blue /= sum_weight;
+    
+    all_red = (int) coc_buffer[idx];
+    all_green = (int) coc_buffer[idx];
+    all_blue = (int) coc_buffer[idx];
+    
+    all_red = (all_red > 255) ? 255 : all_red;
+    all_green = (all_green > 255) ? 255 : all_green;
+    all_blue = (all_blue > 255) ? 255 : all_blue;
 
     new_pixel += 0xff000000 |
             (((int) all_red) << 16) |
@@ -82,4 +92,6 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
             (int) all_blue;
             
 	blur_buffer[idx] = new_pixel;
+	
+
 }

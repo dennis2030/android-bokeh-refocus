@@ -205,6 +205,8 @@ public class MainActivity extends Activity {
                 public boolean onTouch(View v, MotionEvent event) {
                 	double x = event.getX() - drawLeft;
                 	double y = event.getY() - drawTop;
+                //	double x = 536;
+                //	double y = 251;
                 	
                 	// boundary handling
                 	if(x < 0 || y < 0 || x > drawWidth || y > drawHeight)
@@ -216,6 +218,7 @@ public class MainActivity extends Activity {
                 	double depthRatio = (double)depthWidth / drawWidth;
                 	int scaledX = (int)(x*depthRatio);
                 	int scaledY = (int)(y*depthRatio);
+                	
                 	int index = scaledX + scaledY * depthWidth;
                 	int zFocus = convertToRGB( depthPixels[index] )[0]; 
                 	
@@ -224,7 +227,7 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.OPENCL;
+                	ComputeMethod method = ComputeMethod.NATIVE_C;
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;
@@ -251,6 +254,9 @@ public class MainActivity extends Activity {
                     	
                     	Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
                     	
+                    	int result = blur_bitmap.getPixel(250, 250);
+                    	
+                    	Log.d("touch", "R = " + ((result >> 16)&0xff) + ", G = " + ((result >> 8)&0xff) + ", B = " + (result & 0xff) );
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
                         iv.setImageBitmap(blur_bitmap);
                 	}
