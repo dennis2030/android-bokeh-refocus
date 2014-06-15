@@ -8,7 +8,7 @@
 #include "openCLNR.h"
 
 extern "C" jint
-Java_edu_ntu_android2014_MainActivity_runOpenCL(JNIEnv* env, jclass clazz, jobject image, jobject depth, jobject blur, jdoubleArray coc, jintArray tmp_int, jdoubleArray tmp_double, jint zFocus, jint width, jint height)
+Java_edu_ntu_android2014_MainActivity_runOpenCL(JNIEnv* env, jclass clazz, jobject image, jobject depth, jobject blur, jfloatArray coc, jintArray tmp_int, jfloatArray tmp_float, jint zFocus, jint width, jint height)
 {
     void* imageBuffer;
     void* depthBuffer;
@@ -18,24 +18,24 @@ Java_edu_ntu_android2014_MainActivity_runOpenCL(JNIEnv* env, jclass clazz, jobje
     AndroidBitmap_lockPixels(env, depth, &depthBuffer);
     AndroidBitmap_lockPixels(env, blur, &blurBuffer);
 
-    jdouble* cocBuffer = env->GetDoubleArrayElements(coc, NULL);
+    jfloat* cocBuffer = env->GetFloatArrayElements(coc, NULL);
     jint* tmpIntBuffer = env->GetIntArrayElements(tmp_int, NULL);
-    jdouble* tmpDoubleBuffer = env->GetDoubleArrayElements(tmp_double, NULL);
+    jfloat* tmpFloatBuffer = env->GetFloatArrayElements(tmp_float, NULL);
 
-    openCLNR((unsigned int *) imageBuffer, (unsigned int *) depthBuffer, (unsigned int *) blurBuffer, cocBuffer, (unsigned int*)tmpIntBuffer, tmpDoubleBuffer, width, height, zFocus);
+    openCLNR((unsigned int *) imageBuffer, (unsigned int *) depthBuffer, (unsigned int *) blurBuffer, cocBuffer, (unsigned int*)tmpIntBuffer, tmpFloatBuffer, width, height, zFocus);
 
     AndroidBitmap_unlockPixels(env, image);
     AndroidBitmap_unlockPixels(env, depth);
     AndroidBitmap_unlockPixels(env, blur);
-    env->ReleaseDoubleArrayElements(coc, cocBuffer, 0);
+    env->ReleaseFloatArrayElements(coc, cocBuffer, 0);
     env->ReleaseIntArrayElements(tmp_int, tmpIntBuffer, 0);
-    env->ReleaseDoubleArrayElements(tmp_double, tmpDoubleBuffer, 0);
+    env->ReleaseFloatArrayElements(tmp_float, tmpFloatBuffer, 0);
 
 	return 0;
 }
 
 extern "C" jint
-Java_edu_ntu_android2014_MainActivity_runNativeC(JNIEnv* env, jclass clazz, jobject image, jobject depth, jobject blur, jdoubleArray coc, jintArray tmp_int, jdoubleArray tmp_double, jint zFocus, jint width, jint height)
+Java_edu_ntu_android2014_MainActivity_runNativeC(JNIEnv* env, jclass clazz, jobject image, jobject depth, jobject blur, jfloatArray coc, jintArray tmp_int, jfloatArray tmp_float, jint zFocus, jint width, jint height)
 {
     void* imageBuffer;
     void* depthBuffer;
@@ -45,18 +45,18 @@ Java_edu_ntu_android2014_MainActivity_runNativeC(JNIEnv* env, jclass clazz, jobj
     AndroidBitmap_lockPixels(env, depth, &depthBuffer);
     AndroidBitmap_lockPixels(env, blur, &blurBuffer);
 
-    jdouble* cocBuffer = env->GetDoubleArrayElements(coc, NULL);
+    jfloat* cocBuffer = env->GetFloatArrayElements(coc, NULL);
     jint* tmpIntBuffer = env->GetIntArrayElements(tmp_int, NULL);
-    jdouble* tmpDoubleBuffer = env->GetDoubleArrayElements(tmp_double, NULL);
+    jfloat* tmpFloatBuffer = env->GetFloatArrayElements(tmp_float, NULL);
 
-	refNR((unsigned int *) imageBuffer, (unsigned int *) depthBuffer, (unsigned int *) blurBuffer, cocBuffer, (unsigned int*)tmpIntBuffer, tmpDoubleBuffer, width, height, zFocus);
+	refNR((unsigned int *) imageBuffer, (unsigned int *) depthBuffer, (unsigned int *) blurBuffer, cocBuffer, (unsigned int*)tmpIntBuffer, tmpFloatBuffer, width, height, zFocus);
 
     AndroidBitmap_unlockPixels(env, image);
     AndroidBitmap_unlockPixels(env, depth);
     AndroidBitmap_unlockPixels(env, blur);
-    env->ReleaseDoubleArrayElements(coc, cocBuffer, 0);
+    env->ReleaseFloatArrayElements(coc, cocBuffer, 0);
     env->ReleaseIntArrayElements(tmp_int, tmpIntBuffer, 0);
-    env->ReleaseDoubleArrayElements(tmp_double, tmpDoubleBuffer, 0);
+    env->ReleaseFloatArrayElements(tmp_float, tmpFloatBuffer, 0);
 
 	return 0;
 }

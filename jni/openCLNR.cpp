@@ -47,11 +47,11 @@ inline std::string loadProgram(std::string input)
 						(std::istreambuf_iterator<char>()));
 }
 
-void openCLNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, unsigned int *tmp_int_buffer, double *tmp_double_buffer, int width, int height, int z_focus)
+void openCLNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, float *coc_buffer, unsigned int *tmp_int_buffer, float *tmp_float_buffer, int width, int height, int z_focus)
 {
 	LOGI("Begining of openCLNR\n");
 	unsigned int imageSize = width * height * sizeof(int);
-	unsigned int cocSize = width * height * sizeof(double);
+	unsigned int cocSize = width * height * sizeof(float);
 	cl_int err = CL_SUCCESS;
 
 	std::vector<cl::Platform> platforms;
@@ -98,6 +98,9 @@ void openCLNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned i
 			cl::NullRange,
 			NULL,
 			&event);
+
+
+
 
 	queue.finish();
 

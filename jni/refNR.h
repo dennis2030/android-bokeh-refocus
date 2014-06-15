@@ -37,6 +37,6 @@
 
 #include "main.h"
 
-void refNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, unsigned int *tmp_int_buffer, double *tmp_double_buffer, int width, int height, int z_focus);
+void refNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, float *coc_buffer, unsigned int *tmp_int_buffer, float *tmp_float_buffer, int width, int height, int z_focus);
 
 #endif

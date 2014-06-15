@@ -25,8 +25,8 @@ import android.widget.ImageView;
 public class MainActivity extends Activity {
 	private static final String TAG = "MainActivity";
 	
-	public static native int runOpenCL(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int[] tmpInt, double tmpDouble[], int zFocus, int width, int height);
-	public static native int runNativeC(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int[] tmpInt, double tmpDouble[], int zFocus, int width, int height);
+	public static native int runOpenCL(Bitmap image, Bitmap depth, Bitmap blur, float[] coc, int[] tmpInt, float tmpDouble[], int zFocus, int width, int height);
+	public static native int runNativeC(Bitmap image, Bitmap depth, Bitmap blur, float[] coc, int[] tmpInt, float tmpDouble[], int zFocus, int width, int height);
 
 	private double drawLeft = 0;
 	private double drawTop = 0;
@@ -227,25 +227,25 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.NATIVE_C;
+                	ComputeMethod method = ComputeMethod.OPENCL;
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;
                 		long startTime = System.currentTimeMillis();
                 		
                 		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
-                		double[] coc = mBokeh.getCoc();
+                		float[] coc = mBokeh.getCoc();
                 		
                 		if(method == ComputeMethod.JAVA) {
                 			mBokeh.generate(blur_bitmap);
                 		} else {
                 			int[] tmpInt = new int[image_bitmap.getWidth() * image_bitmap.getHeight()];
-                    		double[] tmpDouble = new double[image_bitmap.getWidth() * image_bitmap.getHeight()];
+                			float[] tmpFloat = new float[image_bitmap.getWidth() * image_bitmap.getHeight()];
                     		
                 			if(method == ComputeMethod.NATIVE_C) {
-                				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
                 			} else if(method == ComputeMethod.OPENCL) {
-                    			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                    			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
                     		}
                 		}
                 		

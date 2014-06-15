@@ -37,7 +37,7 @@
 
 #define PATCH_RADIUS 30
 
-void calc_weights(double *weights, double *coc_buffer, unsigned int *depth_buffer, int z_focus, int idx)
+void calc_weights(float *weights, float *coc_buffer, unsigned int *depth_buffer, int z_focus, int idx)
 {
 	int patch_size = PATCH_RADIUS * 2 + 1;
 	for(int i=0;i<patch_size;i++)
@@ -54,7 +54,7 @@ void calc_weights(double *weights, double *coc_buffer, unsigned int *depth_buffe
 		int dist = abs(idx - pixel_now);
 
 		// calculate overlap part
-		double overlap = 0.0;
+		float overlap = 0.0;
 		if(coc_buffer[pixel_now] <= dist)
 		{
 			weights[i] = 0.0;
@@ -70,12 +70,12 @@ void calc_weights(double *weights, double *coc_buffer, unsigned int *depth_buffe
 		}
 
 		// calculate intensity part
-		double intensity = 0.0;
-		double INTENSITY_CONST = 1;
+		float intensity = 0.0;
+		float INTENSITY_CONST = 1;
 		intensity = INTENSITY_CONST / (coc_buffer[pixel_now]);
 
 		// calculate for leakage part
-		double leakage = 1.0;
+		float leakage = 1.0;
 		int z = depth_buffer[pixel_now] & 0xff;
 		if(z > z_focus)
 		{
@@ -85,14 +85,14 @@ void calc_weights(double *weights, double *coc_buffer, unsigned int *depth_buffe
 	}
 }
 
-int inner_product(unsigned int *image_buffer, double *weights, int idx_center)
+int inner_product(unsigned int *image_buffer, float *weights, int idx_center)
 {
     int patch_size = PATCH_RADIUS * 2 + 1;
     int new_pixel = 0x00000000;
 
-    double all_red = 0.0, all_green = 0.0, all_blue = 0.0;
+    float all_red = 0.0, all_green = 0.0, all_blue = 0.0;
 
-    double sum_weight = 0.0;
+    float sum_weight = 0.0;
     for(int i = 0; i < patch_size; ++ i) {
         sum_weight += weights[i];
     }
@@ -119,8 +119,8 @@ int inner_product(unsigned int *image_buffer, double *weights, int idx_center)
     return new_pixel;
 }
 
-void transpose(double *matrix, double *tmp_buffer, int width, int height) {
-	memcpy(tmp_buffer, matrix, width * height * sizeof(double));
+void transpose(float *matrix, float *tmp_buffer, int width, int height) {
+	memcpy(tmp_buffer, matrix, width * height * sizeof(float));
 
 	for(int r = 0; r < height; ++ r) {
 		for(int c = 0; c < width; ++ c) {
@@ -143,14 +143,14 @@ void transpose(unsigned int *matrix, unsigned int *tmp_buffer, int width, int he
 	}
 }
 
-void blur_by_row(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, int width, int height, int z_focus)
+void blur_by_row(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, float *coc_buffer, int width, int height, int z_focus)
 {
 	for(int r = PATCH_RADIUS;r < height - PATCH_RADIUS ; ++r)
 	{
 		for(int c = PATCH_RADIUS; c < width - PATCH_RADIUS; ++c)
 		{
 			int idx = r * width + c;
-			double weights[PATCH_RADIUS*2+1];
+			float weights[PATCH_RADIUS*2+1];
 			calc_weights(weights, coc_buffer, depth_buffer, z_focus, idx);
 
 			int new_pixel = inner_product(image_buffer, weights, idx);
@@ -159,13 +159,13 @@ void blur_by_row(unsigned int *image_buffer, unsigned int *depth_buffer, unsigne
 	}
 }
 
-void refNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, unsigned int *tmp_int_buffer, double *tmp_double_buffer, int width, int height, int z_focus)
+void refNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, float *coc_buffer, unsigned int *tmp_int_buffer, float *tmp_float_buffer, int width, int height, int z_focus)
 {
 	blur_by_row(image_buffer, depth_buffer, blur_buffer, coc_buffer, width, height, z_focus);
 	transpose(image_buffer, tmp_int_buffer, width, height);
 	transpose(depth_buffer, tmp_int_buffer, width, height);
 	transpose(blur_buffer, tmp_int_buffer, width, height);
-	transpose(coc_buffer, tmp_double_buffer, width, height);
+	transpose(coc_buffer, tmp_float_buffer, width, height);
 
 	memcpy(image_buffer, blur_buffer, width * height * sizeof(unsigned int));
 
