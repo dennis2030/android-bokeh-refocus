@@ -1,4 +1,4 @@
-package fi.harism.campaper;
+package edu.ntu.android2014;
 
 import java.util.Arrays;
 
@@ -14,24 +14,30 @@ public class BokehFilter {
 	private int mZFocus;
 	private double maxCoc;
 	private Bitmap mBlur;
+	private double[] mCoc;
+	
 	private int case1 = 0;
 	private int case2 = 0;
 	private int case3 = 0;
 	
 	public BokehFilter(Bitmap image, Bitmap depth, int zFocus) {
-		mImage = image;
-		mDepth = depth;
-		mZFocus = zFocus;
 		if(image.getWidth() != depth.getWidth() || 
 				image.getHeight() != depth.getHeight()) {
 			Log.d(TAG, "image and depth size not compatible");
 		}
+		
+		mImage = image;
+		mDepth = depth;
+		mZFocus = zFocus;
+		
+		int width = mImage.getWidth();
+		int height = mImage.getHeight();
+		int[] depthPixels = new int[width * height];
+		mDepth.getPixels(depthPixels, 0, width, 0, 0, width, height);
+		mCoc = calcCoc(depthPixels, mZFocus);
 	}
 	
-	public Bitmap generate() {
-		if(mBlur != null) {
-			return mBlur;
-		}
+	public void generate(Bitmap res) {
 		int width = mImage.getWidth();
 		int height = mImage.getHeight();
 		
@@ -62,10 +68,11 @@ public class BokehFilter {
 		Log.d(TAG,"case1 = " + case1 + ", case2 = " + case2 + ", case3 = " + case3);
 		transpose(blur, height, width);
 		
-		mBlur = mImage.copy(Bitmap.Config.ARGB_8888, true);
-		mBlur.setPixels(blur, 0, width, 0, 0, width, height);
-		
-		return mBlur;
+		res.setPixels(blur, 0, width, 0, 0, width, height);
+	}
+	
+	public double[] getCoc() {
+		return mCoc;
 	}
 
 	private void blurByRow(int[] blur, int[] image, int[] depth, double[] coc, int width, int height) {

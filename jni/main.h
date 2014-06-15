@@ -1,5 +1,5 @@
 //
-//  sonyOpenCLexample1.h
+//  main.h
 //  OpenCL Example1
 //
 //  Created by Rasmusson, Jim on 18/03/13.

@@ -1,4 +1,4 @@
-package fi.harism.campaper;
+package edu.ntu.android2014;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +20,10 @@ import android.view.MotionEvent;
 import android.widget.ImageView;
 
 public class MainActivity extends Activity {
+	private static final String TAG = "MainActivity";
+	
+	public static native int runOpenCL(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int zFocus, int width, int height);
+	public static native int runNativeC(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int zFocus, int width, int height);
 
 	private double drawLeft = 0;
 	private double drawTop = 0;
@@ -32,6 +36,15 @@ public class MainActivity extends Activity {
 	int[] depthPixels = null;
 	
 	BokehFilter mBokeh;
+	
+	static {
+		try {
+			System.loadLibrary("main");
+		} catch(UnsatisfiedLinkError e) {
+			Log.e(TAG, "load native library failed");
+			Log.e(TAG, e.getMessage());
+		}
+	}
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,15 +207,19 @@ public class MainActivity extends Activity {
                 	int zFocus = convertToRGB( depthPixels[index] )[0]; 
                 	
                 	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
-                	Log.d("touch", "selected depth = " + zFocus);          
+                	Log.d("touch", "selected depth = " + zFocus);
+                	
+                	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
                 	if(mBokeh == null) {
                 		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
-                        Bitmap blur = mBokeh.generate();
-                        ImageView iv = (ImageView)findViewById(R.id.imageview);
-                        iv.setImageBitmap(blur);
+                        //mBokeh.generate(blur_bitmap);
+                        //ImageView iv = (ImageView)findViewById(R.id.imageview);
+                        //iv.setImageBitmap(blur);
                 	}
-                    
+                	
+                	double[] coc = mBokeh.getCoc();                	
+                	runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
 
                     return true;
                 }

@@ -51,7 +51,7 @@
     #include <CL/cl.hpp>
 #endif
 
-#include "sonyOpenCLexample1.h"
+#include "main.h"
 
 void openCLNR (unsigned char* bufIn, unsigned char* bufOut, int* info);
 

@@ -1,4 +1,4 @@
-package fi.harism.campaper;
+package edu.ntu.android2014;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -8,6 +8,7 @@ import com.adobe.xmp.XMPMeta;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.xmp.XmpDirectory;
+
 
 import android.app.ActionBar;
 import android.app.Activity;

@@ -35,7 +35,7 @@
 #ifndef REFNR_H
 #define REFNR_H
 
-#include "sonyOpenCLexample1.h"
+#include "main.h"
 
 void refNR (unsigned char* bufIn, unsigned char* bufOut, int* info);
 
