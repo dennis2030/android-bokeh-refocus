@@ -213,9 +213,13 @@ public class MainActivity extends Activity {
                 	
                 	if(mBokeh == null) {
                 		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
-                        //mBokeh.generate(blur_bitmap);
-                        //ImageView iv = (ImageView)findViewById(R.id.imageview);
-                        //iv.setImageBitmap(blur);
+                		long startTime = System.currentTimeMillis();
+                        mBokeh.generate(blur_bitmap);
+                        long endTime   = System.currentTimeMillis();
+                        long totalTime = endTime - startTime;
+                        Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
+                        ImageView iv = (ImageView)findViewById(R.id.imageview);
+                        iv.setImageBitmap(blur);
                 	}
                 	
                 	double[] coc = mBokeh.getCoc();                	

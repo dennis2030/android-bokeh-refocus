@@ -8,7 +8,7 @@ import android.util.Log;
 public class BokehFilter {
 	private String TAG = "BokehFilter";
 	
-	private int PATCH_RADIUS = 20;
+	private int PATCH_RADIUS = 30;
 	
 	private Bitmap mImage, mDepth;
 	private int mZFocus;
@@ -139,10 +139,14 @@ public class BokehFilter {
             oneRed = (pixel >> 16) & 0xff;
             oneGreen = (pixel >> 8) & 0xff;
             oneBlue = pixel & 0xff;
-            allRed += weights[i] * oneRed / sumWeight;
-            allGreen += weights[i] * oneGreen / sumWeight;
-            allBlue += weights[i] * oneBlue / sumWeight;
+            allRed += weights[i] * oneRed;
+            allGreen += weights[i] * oneGreen;
+            allBlue += weights[i] * oneBlue;
         }
+        
+        allRed /= sumWeight;
+        allGreen /= sumWeight;
+        allBlue /= sumWeight;
         
         newPixel += 0xff000000 |
                 (((int) allRed) << 16) |
@@ -156,7 +160,7 @@ public class BokehFilter {
 		double[] CoC = new double[inputPixels.length];
 		
 		// magic constant
-    	double s = 20.0;
+    	double s = PATCH_RADIUS;
     	
     	double sumCoc = 0.0;
     	
