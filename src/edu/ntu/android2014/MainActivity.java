@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
 	static {
 		try {
 			System.loadLibrary("main");
+			Log.d(TAG, "successfully loaded native library");
 		} catch(UnsatisfiedLinkError e) {
 			Log.e(TAG, "load native library failed");
 			Log.e(TAG, e.getMessage());
@@ -213,13 +214,15 @@ public class MainActivity extends Activity {
                 	
                 	if(mBokeh == null) {
                 		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
+                		/*
                 		long startTime = System.currentTimeMillis();
                         mBokeh.generate(blur_bitmap);
                         long endTime   = System.currentTimeMillis();
                         long totalTime = endTime - startTime;
                         Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
-                        iv.setImageBitmap(blur);
+                        iv.setImageBitmap(blur_bitmap);
+                        */
                 	}
                 	
                 	double[] coc = mBokeh.getCoc();                	
