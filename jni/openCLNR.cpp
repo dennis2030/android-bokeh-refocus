@@ -47,94 +47,59 @@ inline std::string loadProgram(std::string input)
 						(std::istreambuf_iterator<char>()));
 }
 
-void openCLNR (unsigned char* bufIn, unsigned char* bufOut, int* info)
+void openCLNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, unsigned int *tmp_int_buffer, double *tmp_double_buffer, int width, int height, int z_focus)
 {
-	/*
-	LOGI("\n\nStart openCLNR (i.e., OpenCL on the GPU)");
-
-	int width = info[0];
-	int height = info[1];
-	unsigned int imageSize = width * height * 4 * sizeof(cl_uchar);
-
+	LOGI("Begining of openCLNR\n");
+	unsigned int imageSize = width * height * sizeof(int);
+	unsigned int cocSize = width * height * sizeof(double);
 	cl_int err = CL_SUCCESS;
-	try {
 
-		std::vector<cl::Platform> platforms;
-		cl::Platform::get(&platforms);
-		if (platforms.size() == 0) {
-			std::cout << "Platform size 0\n";
-			return;
-		}
-
-		cl_context_properties properties[] =
-		{ CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(), 0};
-		cl::Context context(CL_DEVICE_TYPE_GPU, properties);
-
-		std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
-		cl::CommandQueue queue(context, devices[0], 0, &err);
-
-		std::string kernelSource = loadProgram("/data/data/com.sony.openclexample1/app_execdir/bilateralKernel.cl");
-
-		cl::Program::Sources source(1, std::make_pair(kernelSource.c_str(), kernelSource.length()+1));
-		cl::Program program(context, source);
-		const char *options = "-cl-fast-relaxed-math";
-		program.build(devices, options);
-
-		cl::Kernel kernel(program, "bilateralFilterKernel", &err);
-
-		cl::Buffer bufferIn = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, imageSize, (void *) &bufIn[0], &err);
-		cl::Buffer bufferOut = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, imageSize, (void *) &bufOut[0], &err);
-
-		kernel.setArg(0,bufferIn);
-		kernel.setArg(1,bufferOut);
-		kernel.setArg(2,width);
-		kernel.setArg(3,height);
-
-		cl::Event event;
-
-		clock_t startTimer1, stopTimer1;
-		startTimer1=clock();
-
-		//one time
-		queue.enqueueNDRangeKernel(	kernel,
-				cl::NullRange,
-				cl::NDRange(width,height),
-				cl::NullRange,
-				NULL,
-				&event);
-
-		//swap in and out buffer pointers and run a 2nd time
-		kernel.setArg(0,bufferOut);
-		kernel.setArg(1,bufferIn);
-		queue.enqueueNDRangeKernel(	kernel,
-				cl::NullRange,
-				cl::NDRange(width,height),
-				cl::NullRange,
-				NULL,
-				&event);
-
-		//swap in and out buffer pointers and run a 3rd time
-		kernel.setArg(0,bufferIn);
-		kernel.setArg(1,bufferOut);
-		queue.enqueueNDRangeKernel(	kernel,
-				cl::NullRange,
-				cl::NDRange(width,height),
-				cl::NullRange,
-				NULL,
-				&event);
-
-		queue.finish();
-
-		stopTimer1 = clock();
-		double elapse = 1000.0* (double)(stopTimer1 - startTimer1)/(double)CLOCKS_PER_SEC;
-		info[2] = (int)elapse;
-		LOGI("OpenCL code on the GPU took %g ms\n\n", 1000.0* (double)(stopTimer1 - startTimer1)/(double)CLOCKS_PER_SEC) ;
-
-		queue.enqueueReadBuffer(bufferOut, CL_TRUE, 0, imageSize, bufOut);
+	std::vector<cl::Platform> platforms;
+	cl::Platform::get(&platforms);
+	if (platforms.size() == 0) {
+		std::cout << "Platform size 0\n";
+		return;
 	}
-	catch (cl::Error err) {
-		LOGE("ERROR: %s\n", err.what());
-	}
-	return;
-	*/
+
+	cl_context_properties properties[] =
+	{ CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(), 0};
+	cl::Context context(CL_DEVICE_TYPE_GPU, properties);
+
+	std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
+	cl::CommandQueue queue(context, devices[0], 0, &err);
+
+	std::string kernelSource = loadProgram("/data/data/edu.ntu.android2014/app_execdir/lensBlur.cl");
+	LOGI("After loadProgram\n");
+	cl::Program::Sources source(1, std::make_pair(kernelSource.c_str(), kernelSource.length()+1));
+	cl::Program program(context, source);
+	const char *options = "-cl-fast-relaxed-math";
+	LOGI("Before build\n");
+	program.build(devices, options);
+	LOGI("After build\n");
+	cl::Kernel kernel(program, "lensBlur", &err);
+
+	cl::Buffer cl_image_buffer = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, imageSize, (void *) image_buffer, &err);
+	cl::Buffer cl_depth_buffer = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, imageSize, (void *) depth_buffer, &err);
+	cl::Buffer cl_blur_buffer = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, imageSize, (void *) blur_buffer, &err);
+	cl::Buffer cl_coc_buffer = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, cocSize, (void *) coc_buffer, &err);
+	kernel.setArg(0,cl_image_buffer);
+	kernel.setArg(1,cl_depth_buffer);
+	kernel.setArg(2,cl_blur_buffer);
+	kernel.setArg(3,cl_coc_buffer);
+	kernel.setArg(4,width);
+	kernel.setArg(5,height);
+	kernel.setArg(6,z_focus);
+
+	cl::Event event;
+
+	queue.enqueueNDRangeKernel(	kernel,
+			cl::NullRange,
+			cl::NDRange(width,height),
+			cl::NullRange,
+			NULL,
+			&event);
+
+	queue.finish();
+
+	queue.enqueueReadBuffer(cl_blur_buffer, CL_TRUE, 0, imageSize, blur_buffer);
 }

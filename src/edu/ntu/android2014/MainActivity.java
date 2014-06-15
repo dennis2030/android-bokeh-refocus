@@ -1,7 +1,10 @@
 package edu.ntu.android2014;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -55,6 +58,26 @@ public class MainActivity extends Activity {
 		}
 	}
 	
+	private void copyFile(final String f) {
+	    InputStream in;
+	    try {
+	        in = getAssets().open(f);
+	        final File of = new File(getDir("execdir",MODE_PRIVATE), f);
+
+	        final OutputStream out = new FileOutputStream(of);
+
+	        final byte b[] = new byte[65535];
+	        int sz = 0;
+	        while ((sz = in.read(b)) > 0) {
+	            out.write(b, 0, sz);
+	        }
+	        in.close();
+	        out.close();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,8 +89,8 @@ public class MainActivity extends Activity {
         actionBar.setTitle(R.string.app_name);
         actionBar.setBackgroundDrawable(new ColorDrawable(
                 android.R.color.transparent));
-               
-        
+
+        copyFile("lensBlur.cl");
     }
     
     protected double[] calcCoC(int[] inputPixels, int z_focus ,int width, int height)
@@ -96,25 +119,6 @@ public class MainActivity extends Activity {
         return rgb;
 
     }
-    /*
-    protected Color[][] getRGBValues(int[] pixels, int width, int height)
-    {
-    	Color[][] rgb = new Color[width][height];
-    	for(int y=0;y<height;y++)
-    	{
-    		for(int x=0;x<width;x++)
-    		{
-    			int index = y*width + x;
-    			int p = pixels[index];
-    			int R = (p >> 16) & 0xff;     //bitwise shifting
-                int G = (p>> 8) & 0xff;
-                int B = p & 0xff;
-                rgb[x][y] = new Color(R,G,B);
-    		}
-    	}
-    	return rgb;
-    }*/
-          
     
     @Override
     protected void onStart() {
@@ -220,7 +224,7 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.NATIVE_C;
+                	ComputeMethod method = ComputeMethod.OPENCL;
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;
@@ -231,12 +235,15 @@ public class MainActivity extends Activity {
                 		
                 		if(method == ComputeMethod.JAVA) {
                 			mBokeh.generate(blur_bitmap);
-                		} else if(method == ComputeMethod.NATIVE_C) {
+                		} else {
                 			int[] tmpInt = new int[image_bitmap.getWidth() * image_bitmap.getHeight()];
                     		double[] tmpDouble = new double[image_bitmap.getWidth() * image_bitmap.getHeight()];
-                        	runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
-                		} else if(method == ComputeMethod.OPENCL) {
-                			// to be implemented
+                    		
+                			if(method == ComputeMethod.NATIVE_C) {
+                				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                			} else if(method == ComputeMethod.OPENCL) {
+                    			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                    		}
                 		}
                 		
                     	long endTime   = System.currentTimeMillis();

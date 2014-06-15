@@ -53,6 +53,6 @@
 
 #include "main.h"
 
-void openCLNR (unsigned char* bufIn, unsigned char* bufOut, int* info);
+void openCLNR(unsigned int *image_buffer, unsigned int *depth_buffer, unsigned int *blur_buffer, double *coc_buffer, unsigned int *tmp_int_buffer, double *tmp_double_buffer, int width, int height, int z_focus);
 
 #endif
