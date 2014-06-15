@@ -49,7 +49,7 @@ inline std::string loadProgram(std::string input)
 
 void openCLNR (unsigned char* bufIn, unsigned char* bufOut, int* info)
 {
-
+	/*
 	LOGI("\n\nStart openCLNR (i.e., OpenCL on the GPU)");
 
 	int width = info[0];
@@ -136,4 +136,5 @@ void openCLNR (unsigned char* bufIn, unsigned char* bufOut, int* info)
 		LOGE("ERROR: %s\n", err.what());
 	}
 	return;
+	*/
 }

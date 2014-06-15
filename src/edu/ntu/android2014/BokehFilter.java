@@ -48,9 +48,8 @@ public class BokehFilter {
 		mImage.getPixels(image, 0, width, 0, 0, width, height);
 		mDepth.getPixels(depth, 0, width, 0, 0, width, height);
 		Log.d(TAG,"case z:" + mZFocus);
-		double[] coc = calcCoc(depth, mZFocus);
 		
-		blurByRow(blur, image, depth, coc, width, height);
+		blurByRow(blur, image, depth, mCoc, width, height);
 		
 		Log.d(TAG,"case1 = " + case1 + ", case2 = " + case2 + ", case3 = " + case3);
 		
@@ -62,9 +61,9 @@ public class BokehFilter {
 		transpose(blur, width, height);
 		transpose(image, width, height);
 		transpose(depth, width, height);
-		transpose(coc, width, height);
+		transpose(mCoc, width, height);
 		
-		blurByRow(blur, image, depth, coc, height, width);
+		blurByRow(blur, image, depth, mCoc, height, width);
 		Log.d(TAG,"case1 = " + case1 + ", case2 = " + case2 + ", case3 = " + case3);
 		transpose(blur, height, width);
 		

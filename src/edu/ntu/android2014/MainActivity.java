@@ -22,8 +22,8 @@ import android.widget.ImageView;
 public class MainActivity extends Activity {
 	private static final String TAG = "MainActivity";
 	
-	public static native int runOpenCL(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int zFocus, int width, int height);
-	public static native int runNativeC(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int zFocus, int width, int height);
+	public static native int runOpenCL(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int[] tmpInt, double tmpDouble[], int zFocus, int width, int height);
+	public static native int runNativeC(Bitmap image, Bitmap depth, Bitmap blur, double[] coc, int[] tmpInt, double tmpDouble[], int zFocus, int width, int height);
 
 	private double drawLeft = 0;
 	private double drawTop = 0;
@@ -35,7 +35,15 @@ public class MainActivity extends Activity {
 	
 	int[] depthPixels = null;
 	
+	boolean isRunningBokeh;
+	
 	BokehFilter mBokeh;
+	
+	private enum ComputeMethod {
+		JAVA,
+		NATIVE_C,
+		OPENCL
+	}
 	
 	static {
 		try {
@@ -212,21 +220,35 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	if(mBokeh == null) {
-                		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
-                		/*
+                	ComputeMethod method = ComputeMethod.NATIVE_C;
+                	
+                	if(!isRunningBokeh) {
+                		isRunningBokeh = true;
                 		long startTime = System.currentTimeMillis();
-                        mBokeh.generate(blur_bitmap);
-                        long endTime   = System.currentTimeMillis();
-                        long totalTime = endTime - startTime;
-                        Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
+                		
+                		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
+                		double[] coc = mBokeh.getCoc();
+                		
+                		if(method == ComputeMethod.JAVA) {
+                			mBokeh.generate(blur_bitmap);
+                		} else if(method == ComputeMethod.NATIVE_C) {
+                			int[] tmpInt = new int[image_bitmap.getWidth() * image_bitmap.getHeight()];
+                    		double[] tmpDouble = new double[image_bitmap.getWidth() * image_bitmap.getHeight()];
+                        	runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpDouble, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                		} else if(method == ComputeMethod.OPENCL) {
+                			// to be implemented
+                		}
+                		
+                    	long endTime   = System.currentTimeMillis();
+                    	long totalTime = endTime - startTime;
+                    	
+                    	Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
+                    	
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
                         iv.setImageBitmap(blur_bitmap);
-                        */
                 	}
                 	
-                	double[] coc = mBokeh.getCoc();                	
-                	runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                	
 
                     return true;
                 }
