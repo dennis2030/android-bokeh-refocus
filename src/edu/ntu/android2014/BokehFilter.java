@@ -8,7 +8,7 @@ import android.util.Log;
 public class BokehFilter {
 	private String TAG = "BokehFilter";
 	
-	private int PATCH_RADIUS = 15;
+	private int PATCH_RADIUS = 10;
 	
 	private Bitmap mImage, mDepth;
 	private int mZFocus;

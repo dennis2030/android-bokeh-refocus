@@ -107,9 +107,10 @@ public class MainActivity extends Activity {
             image_bitmap = BitmapFactory.decodeStream(is);
             
             // resize bitmaps
-            //image_bitmap = Bitmap.createScaledBitmap(image_bitmap, (int)(image_bitmap.getWidth()/2.5), (int)(image_bitmap.getHeight()/2.5), false);            
-            //depth_bitmap = Bitmap.createScaledBitmap(depth_bitmap, (int)(depth_bitmap.getWidth()/2.5), (int)(depth_bitmap.getHeight()/2.5), false);
-         
+            image_bitmap = Bitmap.createScaledBitmap(image_bitmap, (int)(image_bitmap.getWidth()/3), (int)(image_bitmap.getHeight()/3), false);            
+            depth_bitmap = Bitmap.createScaledBitmap(depth_bitmap, (int)(depth_bitmap.getWidth()/3), (int)(depth_bitmap.getHeight()/3), false);
+            
+            Log.d("touch", "width = " + image_bitmap.getWidth() + ", height = " + image_bitmap.getHeight());
             // copy pixels of depth image into depthPixels
             depthPixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
             depth_bitmap.getPixels(depthPixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
@@ -206,7 +207,7 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.NATIVE_C;
+                	ComputeMethod method = ComputeMethod.OPENCL;
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;

@@ -1,4 +1,4 @@
-#define PATCH_RADIUS 100
+#define PATCH_RADIUS 10
 
 __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, __global int* blur_buffer, __global float *coc_buffer, const int width, const int height, const int z_focus)
 {
