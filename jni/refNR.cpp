@@ -35,7 +35,7 @@
 #include "refNR.h"
 #include <cstdlib>
 
-#define PATCH_RADIUS 30
+#define PATCH_RADIUS 15
 
 void calc_weights(float *weights, float *coc_buffer, unsigned int *depth_buffer, int z_focus, int idx)
 {

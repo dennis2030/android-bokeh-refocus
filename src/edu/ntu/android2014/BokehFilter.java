@@ -8,7 +8,7 @@ import android.util.Log;
 public class BokehFilter {
 	private String TAG = "BokehFilter";
 	
-	private int PATCH_RADIUS = 30;
+	private int PATCH_RADIUS = 15;
 	
 	private Bitmap mImage, mDepth;
 	private int mZFocus;
@@ -78,7 +78,7 @@ public class BokehFilter {
 		int hoho = 0;
 		
 		for(int r = PATCH_RADIUS; r < height - PATCH_RADIUS; ++ r) {
-			Log.d(TAG, "bluring " + r + " row");
+		//	Log.d(TAG, "bluring " + r + " row");
 			for(int c = PATCH_RADIUS; c < width - PATCH_RADIUS; ++ c) {
 				int idx = r * width + c;
 				float[] weights = calcWeights(coc, depth, idx);

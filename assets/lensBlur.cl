@@ -1,4 +1,4 @@
-#define PATCH_RADIUS 30
+#define PATCH_RADIUS 100
 
 __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, __global int* blur_buffer, __global float *coc_buffer, const int width, const int height, const int z_focus)
 {
@@ -42,7 +42,8 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
 		// calculate intensity part
 		float intensity = 0.0;
 		float INTENSITY_CONST = 1;
-		intensity = INTENSITY_CONST / (coc_buffer[pixel_now]);
+		//intensity = INTENSITY_CONST / (coc_buffer[pixel_now]*coc_buffer[pixel_now]);
+		intensity = 1/(coc_buffer[pixel_now]*coc_buffer[pixel_now]);
 
 		// calculate for leakage part
 		float leakage = 1.0;
@@ -76,7 +77,6 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
     all_red /= sum_weight;
     all_green /= sum_weight;
     all_blue /= sum_weight;
-     
 
     new_pixel += 0xff000000 |
             (((int) all_red) << 16) |

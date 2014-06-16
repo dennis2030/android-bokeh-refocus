@@ -91,33 +91,8 @@ public class MainActivity extends Activity {
                 android.R.color.transparent));
 
         copyFile("lensBlur.cl");
-    }
-    
-    protected double[] calcCoC(int[] inputPixels, int z_focus ,int width, int height)
-    {
-    	double[] CoC = new double[width*height];
-    	double s = 3.0;
-    	
-    	for(int i=0;i<inputPixels.length;i++)
-    	{
-    		int depth = convertToRGB(inputPixels[i])[0];
-    		CoC[i] = s * Math.abs(1-z_focus/ depth);
-    		
-    	}
-    	
-    	return CoC;
-    }
-    protected int[] convertToRGB(int input)
-    {
-    	int[] rgb = new int[3];
-		int R = (input >> 16) & 0xff;     //bitwise shifting
-        int G = (input >> 8) & 0xff;
-        int B = input & 0xff;
-        rgb[0] = R;
-        rgb[1] = G;
-        rgb[2] = B;
-        return rgb;
-
+        copyFile("transposeFloat.cl");
+        copyFile("transposeInt.cl");
     }
     
     @Override
@@ -129,7 +104,11 @@ public class MainActivity extends Activity {
             is = openFileInput("depthmap");
             depth_bitmap = BitmapFactory.decodeStream(is);
             is = openFileInput("image");
-            image_bitmap = BitmapFactory.decodeStream(is);                       
+            image_bitmap = BitmapFactory.decodeStream(is);
+            
+            // resize bitmaps
+            //image_bitmap = Bitmap.createScaledBitmap(image_bitmap, (int)(image_bitmap.getWidth()/2.5), (int)(image_bitmap.getHeight()/2.5), false);            
+            //depth_bitmap = Bitmap.createScaledBitmap(depth_bitmap, (int)(depth_bitmap.getWidth()/2.5), (int)(depth_bitmap.getHeight()/2.5), false);
          
             // copy pixels of depth image into depthPixels
             depthPixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
@@ -137,7 +116,7 @@ public class MainActivity extends Activity {
             
             setContentView(R.layout.layout_main);
             ImageView iv = (ImageView)findViewById(R.id.imageview);
-            iv.setImageBitmap(depth_bitmap);                                                
+            iv.setImageBitmap(image_bitmap);                                                
          
             
         } catch (Exception ex) {
@@ -220,14 +199,14 @@ public class MainActivity extends Activity {
                 	int scaledY = (int)(y*depthRatio);
                 	
                 	int index = scaledX + scaledY * depthWidth;
-                	int zFocus = convertToRGB( depthPixels[index] )[0]; 
+                	int zFocus = depthPixels[index] & 0xff; 
                 	
                 	Log.d("touch","x = " + (event.getX()- drawLeft) + ", y = " + (event.getY()-drawTop));
                 	Log.d("touch", "selected depth = " + zFocus);
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.OPENCL;
+                	ComputeMethod method = ComputeMethod.NATIVE_C;
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;
@@ -253,10 +232,7 @@ public class MainActivity extends Activity {
                     	long totalTime = endTime - startTime;
                     	
                     	Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
-                    	
-                    	int result = blur_bitmap.getPixel(250, 250);
-                    	
-                    	Log.d("touch", "R = " + ((result >> 16)&0xff) + ", G = " + ((result >> 8)&0xff) + ", B = " + (result & 0xff) );
+                    	                    	                    	                    
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
                         iv.setImageBitmap(blur_bitmap);
                 	}
