@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -8,6 +9,42 @@
         android:id="@+id/imageview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:contentDescription="@android:string/untitled" />
 
-</LinearLayout>
+    <RadioGroup
+        android:id="@+id/radioGroup_SelectMethod"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal" >
+
+        <RadioButton
+            android:id="@+id/radio_JAVA"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Java" />
+
+        <RadioButton
+            android:id="@+id/radio_C"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Native C" />
+
+        <RadioButton
+            android:id="@+id/radio_OpenCL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OpenCL" />
+
+        <TextView
+            android:id="@+id/timeTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </RadioGroup>
+
+</RelativeLayout>
