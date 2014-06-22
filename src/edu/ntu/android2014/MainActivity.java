@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.MotionEvent;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 
 public class MainActivity extends Activity {
 	private static final String TAG = "MainActivity";
@@ -41,6 +42,7 @@ public class MainActivity extends Activity {
 	boolean isRunningBokeh;
 	
 	BokehFilter mBokeh;
+	ComputeMethod method;
 	
 	private enum ComputeMethod {
 		JAVA,
@@ -89,6 +91,7 @@ public class MainActivity extends Activity {
         actionBar.setTitle(R.string.app_name);
         actionBar.setBackgroundDrawable(new ColorDrawable(
                 android.R.color.transparent));
+        
 
         copyFile("lensBlur.cl");
         copyFile("transposeFloat.cl");
@@ -113,9 +116,41 @@ public class MainActivity extends Activity {
             Log.d("touch", "width = " + image_bitmap.getWidth() + ", height = " + image_bitmap.getHeight());
             // copy pixels of depth image into depthPixels
             depthPixels = new int[depth_bitmap.getWidth() * depth_bitmap.getHeight()];
-            depth_bitmap.getPixels(depthPixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());
+            depth_bitmap.getPixels(depthPixels, 0, depth_bitmap.getWidth(), 0, 0, depth_bitmap.getWidth(), depth_bitmap.getHeight());                       
             
             setContentView(R.layout.layout_main);
+            
+            // set default compute method
+            method = ComputeMethod.JAVA;
+            
+            // set RadioGroup listener
+            RadioGroup rg = (RadioGroup)findViewById(R.id.radioGroup_SelectMethod);
+            rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+				
+				@Override
+				public void onCheckedChanged(RadioGroup group, int checkedId) {
+					switch(checkedId)
+					{
+						case -1:
+							Log.d("touch","Choices cleared.");
+							break;
+						case R.id.radio_JAVA:
+							Log.d("touch","Select JAVA");
+							method = ComputeMethod.JAVA;
+							break;
+						case R.id.radio_C:
+							Log.d("touch","Select Native C.");
+							method = ComputeMethod.NATIVE_C;
+							break;
+						case R.id.radio_OpenCL:
+							Log.d("touch","Select OpenCL");
+							method = ComputeMethod.OPENCL;
+							break;
+					}
+					
+				}
+			});
+            
             ImageView iv = (ImageView)findViewById(R.id.imageview);
             iv.setImageBitmap(image_bitmap);                                                
          
@@ -183,10 +218,11 @@ public class MainActivity extends Activity {
             iv.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
+                	// skip the 2nd event on one touch to avoid it do things twice
+                	if(event.getAction() == MotionEvent.ACTION_UP)
+                		return false;
                 	double x = event.getX() - drawLeft;
                 	double y = event.getY() - drawTop;
-                //	double x = 536;
-                //	double y = 251;
                 	
                 	// boundary handling
                 	if(x < 0 || y < 0 || x > drawWidth || y > drawHeight)
@@ -207,14 +243,17 @@ public class MainActivity extends Activity {
                 	
                 	Bitmap blur_bitmap = image_bitmap.copy(Bitmap.Config.ARGB_8888, true);
                 	
-                	ComputeMethod method = ComputeMethod.OPENCL;
+                	// set the running method
+                	
                 	
                 	if(!isRunningBokeh) {
                 		isRunningBokeh = true;
-                		long startTime = System.currentTimeMillis();
-                		
+                		// calc coc
                 		mBokeh = new BokehFilter(image_bitmap, depth_bitmap, zFocus);
                 		float[] coc = mBokeh.getCoc();
+                		
+                		// start timer
+                		long startTime = System.currentTimeMillis();
                 		
                 		if(method == ComputeMethod.JAVA) {
                 			mBokeh.generate(blur_bitmap);
@@ -236,6 +275,7 @@ public class MainActivity extends Activity {
                     	                    	                    	                    
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
                         iv.setImageBitmap(blur_bitmap);
+                        isRunningBokeh = false;
                 	}
                 	
                 	
