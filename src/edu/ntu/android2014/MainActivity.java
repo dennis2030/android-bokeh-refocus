@@ -269,14 +269,9 @@ public class MainActivity extends Activity {
                 			float[] tmpFloat = new float[image_bitmap.getWidth() * image_bitmap.getHeight()];
                     		
                 			if(method == ComputeMethod.NATIVE_C) {                				
-                				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
-                				Log.d("Size","Width = " + origin_image_bitmap.getWidth() + ", Height = " + origin_image_bitmap.getHeight());
-                			//	image_bitmap = origin_image_bitmap;
-                		//		image_bitmap = Bitmap.createScaledBitmap(origin_image_bitmap, origin_image_bitmap.getWidth(), origin_image_bitmap.getHeight(), false);
-                				
+                				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());                				
                 			} else if(method == ComputeMethod.OPENCL) {
-                    			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
-                    			
+                    			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());                    			
                     		}
                 		}
                 		
@@ -284,8 +279,7 @@ public class MainActivity extends Activity {
                     	long totalTime = endTime - startTime;
                     	//image_bitmap = origin_image_bitmap;
                     	image_bitmap = Bitmap.createScaledBitmap(origin_image_bitmap, origin_image_bitmap.getWidth(), origin_image_bitmap.getHeight(), false);
-                    	depth_bitmap = Bitmap.createScaledBitmap(origin_depth_bitmap, origin_depth_bitmap.getWidth(), origin_depth_bitmap.getHeight(), false);
-                    	Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
+                    	depth_bitmap = Bitmap.createScaledBitmap(origin_depth_bitmap, origin_depth_bitmap.getWidth(), origin_depth_bitmap.getHeight(), false);                    	
                     	TextView tv = (TextView)findViewById(R.id.timeTextView);
                     	tv.setText("Run Time = " + totalTime);
                         ImageView iv = (ImageView)findViewById(R.id.imageview);

@@ -43,7 +43,7 @@ __kernel void lensBlur(__global int *image_buffer, __global int *depth_buffer, _
 		float intensity = 0.0;
 		float INTENSITY_CONST = 1;
 		//intensity = INTENSITY_CONST / (coc_buffer[pixel_now]*coc_buffer[pixel_now]);
-		intensity = 1/(coc_buffer[pixel_now]*coc_buffer[pixel_now]);
+		intensity = 1/(coc_buffer[pixel_now]);
 
 		// calculate for leakage part
 		float leakage = 1.0;
