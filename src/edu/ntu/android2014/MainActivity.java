@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	private static final String TAG = "MainActivity";
@@ -36,6 +37,8 @@ public class MainActivity extends Activity {
 	
 	private Bitmap depth_bitmap = null;
 	private Bitmap image_bitmap = null;
+	private Bitmap origin_image_bitmap = null;
+	private Bitmap origin_depth_bitmap = null;
 	
 	int[] depthPixels = null;
 	
@@ -108,10 +111,14 @@ public class MainActivity extends Activity {
             depth_bitmap = BitmapFactory.decodeStream(is);
             is = openFileInput("image");
             image_bitmap = BitmapFactory.decodeStream(is);
+         
             
             // resize bitmaps
             image_bitmap = Bitmap.createScaledBitmap(image_bitmap, (int)(image_bitmap.getWidth()/3), (int)(image_bitmap.getHeight()/3), false);            
             depth_bitmap = Bitmap.createScaledBitmap(depth_bitmap, (int)(depth_bitmap.getWidth()/3), (int)(depth_bitmap.getHeight()/3), false);
+            
+            origin_image_bitmap = Bitmap.createScaledBitmap(image_bitmap, image_bitmap.getWidth(), image_bitmap.getHeight(), false);
+            origin_depth_bitmap = Bitmap.createScaledBitmap(depth_bitmap, depth_bitmap.getWidth(), depth_bitmap.getHeight(), false);
             
             Log.d("touch", "width = " + image_bitmap.getWidth() + ", height = " + image_bitmap.getHeight());
             // copy pixels of depth image into depthPixels
@@ -261,18 +268,26 @@ public class MainActivity extends Activity {
                 			int[] tmpInt = new int[image_bitmap.getWidth() * image_bitmap.getHeight()];
                 			float[] tmpFloat = new float[image_bitmap.getWidth() * image_bitmap.getHeight()];
                     		
-                			if(method == ComputeMethod.NATIVE_C) {
+                			if(method == ComputeMethod.NATIVE_C) {                				
                 				runNativeC(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                				Log.d("Size","Width = " + origin_image_bitmap.getWidth() + ", Height = " + origin_image_bitmap.getHeight());
+                			//	image_bitmap = origin_image_bitmap;
+                		//		image_bitmap = Bitmap.createScaledBitmap(origin_image_bitmap, origin_image_bitmap.getWidth(), origin_image_bitmap.getHeight(), false);
+                				
                 			} else if(method == ComputeMethod.OPENCL) {
                     			runOpenCL(image_bitmap, depth_bitmap, blur_bitmap, coc, tmpInt, tmpFloat, zFocus, image_bitmap.getWidth(), image_bitmap.getHeight());
+                    			
                     		}
                 		}
                 		
                     	long endTime   = System.currentTimeMillis();
                     	long totalTime = endTime - startTime;
-                    	
+                    	//image_bitmap = origin_image_bitmap;
+                    	image_bitmap = Bitmap.createScaledBitmap(origin_image_bitmap, origin_image_bitmap.getWidth(), origin_image_bitmap.getHeight(), false);
+                    	depth_bitmap = Bitmap.createScaledBitmap(origin_depth_bitmap, origin_depth_bitmap.getWidth(), origin_depth_bitmap.getHeight(), false);
                     	Log.d("touch", "Total time of bokeh is " + totalTime + "ms.");
-                    	                    	                    	                    
+                    	TextView tv = (TextView)findViewById(R.id.timeTextView);
+                    	tv.setText("Run Time = " + totalTime);
                         ImageView iv = (ImageView)findViewById(R.id.imageview);
                         iv.setImageBitmap(blur_bitmap);
                         isRunningBokeh = false;
